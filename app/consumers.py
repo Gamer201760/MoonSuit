@@ -51,14 +51,14 @@ class MyCons(GenericAsyncAPIConsumer):
             
 
     @action()
-    async def setcontrolling(self, controlling, key, **kwargs):
+    async def setcontrolling(self, controlling, keys, **kwargs):
 
-        await self.send_json(await self.set_device_controlling(key, controlling))
-
-        await self.channel_layer.group_send(f"chat_{key}", {
-            "type": "controlling_msg",
-            "controlling": controlling
-        })
+        for key in keys:
+            await self.send_json(await self.set_device_controlling(key, controlling))
+            await self.channel_layer.group_send(f"chat_{key}", {
+                "type": "controlling_msg",
+                "controlling": controlling
+            })
     
     @action()
     async def setdatas(self, datas, **kwargs):
