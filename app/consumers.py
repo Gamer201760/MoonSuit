@@ -45,8 +45,7 @@ class MyCons(GenericAsyncAPIConsumer):
                 "type": "typing_msg",
                 "types": "getdatas"
             })
-            
-
+        
     @action()
     async def setcontrolling(self, controlling, keys, **kwargs):
 

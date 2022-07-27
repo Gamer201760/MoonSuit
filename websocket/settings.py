@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'channels',
     'app',
     'corsheaders',
+    'api'
 ]
 
 MIDDLEWARE = [
@@ -132,8 +133,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
 
-AUTH_USER_MODEL = 'auth.User'
+AUTH_USER_MODEL = 'api.User'
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
