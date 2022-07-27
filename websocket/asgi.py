@@ -18,7 +18,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'websocket.settings')
 
 django.setup()
 from app.routing import *
-
 from app.tokenAuth import *
 # application = get_asgi_application()
 

@@ -1,10 +1,7 @@
-import json
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
+from djangochannelsrestframework.observer.generics import action
 from .serializers import *
-from djangochannelsrestframework import mixins
-from asgiref.sync import sync_to_async, async_to_sync
-
+from .services import *
 
 
 class MyCons(GenericAsyncAPIConsumer):
@@ -54,7 +51,7 @@ class MyCons(GenericAsyncAPIConsumer):
     async def setcontrolling(self, controlling, keys, **kwargs):
 
         for key in keys:
-            await self.send_json(await self.set_device_controlling(key, controlling))
+            await self.send_json(await set_device_controlling(key, controlling))
             await self.channel_layer.group_send(f"chat_{key}", {
                 "type": "controlling_msg",
                 "controlling": controlling
@@ -64,7 +61,7 @@ class MyCons(GenericAsyncAPIConsumer):
     async def setdatas(self, datas, **kwargs):
         key = self.scope["key"]
         print(key)
-        await self.send_json(await self.set_device_datas(key, datas))
+        await self.send_json(await set_device_datas(key, datas))
 
         await self.channel_layer.group_send("chat_datas", {
             "type": "data_msg",
@@ -96,8 +93,3 @@ class MyCons(GenericAsyncAPIConsumer):
         await self.send_json({
             "type": types
         })
-
-    
-
-    
-    
