@@ -11,6 +11,7 @@ class Device(models.Model):
     datas = models.JSONField(blank=True)
     controlling = models.JSONField(blank=True)
     key = models.UUIDField(default=uuid.uuid4(), primary_key=True)
+    tag = models.CharField(max_length=15)
 
     def __str__(self) -> str:
         return str(self.key)
