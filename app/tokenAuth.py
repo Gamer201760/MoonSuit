@@ -17,8 +17,6 @@ from django.db import close_old_connections
 
 ALGORITHM = "HS256"
 
-
-
 @database_sync_to_async
 def get_user(token):
     try:

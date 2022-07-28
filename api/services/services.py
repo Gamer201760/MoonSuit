@@ -9,10 +9,12 @@ from rest_framework import serializers
 from django.db import transaction
 from rest_framework.response import Response
 from django.conf import settings
+from django.db.utils import IntegrityError
 import jwt
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework import status
+from app.models import Device
 
 @transaction.atomic
 def Register_services(request: HttpRequest, serializer_class: RegisterUserSerializer):
@@ -28,14 +30,21 @@ def Register_services(request: HttpRequest, serializer_class: RegisterUserSerial
     )
 
 def VerifiEmail_services(token):
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
 
-    user = User.objects.get(username=payload["user_id"])
+        user = User.objects.get(username=payload["user_id"])
 
-    Token.objects.create(user=user)
-    user.is_verified = True
-    user.save()
-
+        Token.objects.create(user=user)
+        user.is_verified = True
+        user.save()
+        return Response({"status": "Email is Activated"}, status=status.HTTP_200_OK)
+    except jwt.ExpiredSignatureError as e:
+            return Response({"error": "Email is expired"}, status=status.HTTP_400_BAD_REQUEST)
+    except jwt.exceptions.DecodeError as e:
+        return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+    except IntegrityError as e:
+        return Response({"error": "You have already used this link"}, status=status.HTTP_400_BAD_REQUEST)
 
 def AgainVerifyEmail_services(request: HttpRequest, serializer_class: RegisterUserSerializer): 
     serializer = _base_ser_settings(request, serializer_class)
@@ -57,6 +66,30 @@ def AgainVerifyEmail_services(request: HttpRequest, serializer_class: RegisterUs
         email=user.email
     )
     return Response({"message": "Ok"})
+
+
+def RegisterDevice_services(request: HttpRequest, serializer_class: serializers.ModelSerializer):
+    serializer = _base_ser_settings(request, serializer_class)
+
+    count = Device.objects.filter(owner=request.user).count()
+    if count > 10 and request.user.is_staff == False:
+        return Response({"error": "You can't create more than 10 devices"}, status=status.HTTP_404_NOT_FOUND)
+    serializer.save(owner=request.user)
+    return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+
+def DeleteDevice_services(request: HttpRequest, serializer_class: serializers.ModelSerializer):
+    serializer = _base_ser_settings(request, serializer_class)
+    key = serializer.validated_data.get("key", None)
+    if key is None:
+        return Response({"error": ["Key is nullable"]}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        device = Device.objects.get(key=key, owner=request.user)
+        device.delete()
+        return Response({"message": "succesful"}, status=status.HTTP_200_OK)
+    except:
+        return Response({"error": ["Device is not exists"]}, status=status.HTTP_404_NOT_FOUND)
+    
 
 
 def _generator_absurl(request: HttpRequest, username: str) -> str:

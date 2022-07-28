@@ -8,12 +8,8 @@ from rest_framework.response import Response
 from .services.utils import *
 from .services.services import *
 from django.http import HttpRequest
-from django.db.utils import IntegrityError
-import jwt
 
 # Create your views here.
-
-
 
 class Register(APIView):
 
@@ -32,16 +28,7 @@ class VerifyEmail(generics.GenericAPIView):
         if token is None:
             return Response({"error": "token is nullable"},status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            VerifiEmail_services(token)
-
-            return Response({"status": "Email is Activated"}, status=status.HTTP_200_OK)
-        except jwt.ExpiredSignatureError as e:
-            return Response({"error": "Email is expired"}, status=status.HTTP_400_BAD_REQUEST)
-        except jwt.exceptions.DecodeError as e:
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
-        except IntegrityError as e:
-            return Response({"error": "You have already used this link"}, status=status.HTTP_400_BAD_REQUEST)
+        return VerifiEmail_services(token)
 
 
 class AgainVerifyEmail(APIView):
@@ -50,4 +37,14 @@ class AgainVerifyEmail(APIView):
 
     def post(self, request: HttpRequest):
         return AgainVerifyEmail_services(request=request, serializer_class=self.serializer_class)
-        
+
+class RegisterDevice(APIView):
+
+    permission_classes = [IsAuthenticated]
+    serializer_class: serializers.ModelSerializer = RegisterDeviceSerializer
+
+    def post(self, request: HttpRequest):
+        return RegisterDevice_services(request=request, serializer_class=self.serializer_class)
+
+    def delete(self, request: HttpRequest):
+        return DeleteDevice_services(request=request, serializer_class=self.serializer_class)

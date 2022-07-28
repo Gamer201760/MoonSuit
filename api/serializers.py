@@ -1,9 +1,7 @@
 from django.contrib.auth.hashers import make_password
-from django.forms import CharField
-from rest_framework import serializers, generics
+from rest_framework import serializers
 from .models import *
-from rest_framework.response import Response
-
+from app.models import Device
 
 class RegisterUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,3 +23,23 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 class AgainVerifySerializer(serializers.Serializer):
     username = serializers.CharField(max_length=30)
     password = serializers.CharField(max_length=30)
+
+
+class RegisterDeviceSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Device
+        fields = ("name", "tag", "key")
+        extra_kwargs = {
+            "key": {
+                "validators": []
+            }
+        }
+
+    def create(self, validated_data):
+        device = Device.objects.create(
+            name=validated_data.get("name", None),
+            tag=validated_data.get("tag", None),
+            owner=validated_data.get('owner')
+        )
+        return device

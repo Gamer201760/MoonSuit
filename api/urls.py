@@ -27,7 +27,7 @@ urlpatterns = [
     path('register/', Register.as_view()),
     path("email-verify/", VerifyEmail.as_view(), name="email-verify"),
     path("again-email-verify/", AgainVerifyEmail.as_view(), name="again-email-verify"),
-    # path('module/register/', RegisterModule.as_view()),
+    path('module/register/', RegisterDevice.as_view()),
     # path('module/delete/<pk>/', RegisterModule.as_view()),
     # path('module/register/<uuid:serialkey>/', RegisterModule.as_view()),
     # path('getmodulesinfo/', getModulesInfo.as_view()),
