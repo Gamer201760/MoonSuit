@@ -1,81 +1,70 @@
 import os
-from datetime import datetime
 from app.models import *
+from api.models import User
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 from rest_framework.authtoken.models import Token
-from channels.auth import AuthMiddlewareStack
-from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
+
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
 
-from django.contrib.auth.models import User
 from django.db import close_old_connections
 
 ALGORITHM = "HS256"
 
 @database_sync_to_async
-def get_user(token):
+def _getUser(token: str) -> User:
     try:
-        payload = Token.objects.get(key=token)
-        print('payload', payload.user)
+        return Token.objects.get(key=token).user
     except:
-        print('no payload')
-        return AnonymousUser()
-
-    return payload.user
-@database_sync_to_async
-def get_device(key):
-    try:
-        payload = Device.objects.get(key=key)
-        print('payload', payload)
-    except:
-        print('no payload')
         return None
 
-
-    return payload
+@database_sync_to_async
+def _getDevice(user: User, key: str) -> Device:
+    try:
+        return Device.objects.get(owner=user, key=key)
+    except:
+        return None
 
 
 class TokenAuthMiddleware(BaseMiddleware):
 
     async def __call__(self, scope, receive, send):
         close_old_connections()
-        print(scope)
-        # token_key = scope['query_string'].decode().split('=')[-1]
-        headers = dict(scope['headers'])
-        if b'authorization' in headers:
-            try:
-                token_name, token_key = headers[b'authorization'].decode().split()
-                if token_name == 'Token':
-                    scope['user'] = await get_user(token_key)
-                    print('d2', scope['user'])
-                    return await super().__call__(scope, receive, send)
-                elif token_name == 'Key':
-                    scope['key'] = await get_device(token_key)
-                    print('d2', scope['key'])
-                    return await super().__call__(scope, receive, send)
-            except ValueError:
-                token_key = None
-                print("Token Key:", token_key)
-        else: 
-            try:
-                token_key = (dict((x.split('=') for x in scope['query_string'].decode().split("&")))).get('token', None)
-                scope['user'] = await get_user(token_key)
-                print('d2', scope['user'])
-                return await super().__call__(scope, receive, send)
-            except ValueError:
-                token_key = None
-        # try:
-        #     token_key = dict(scope['headers'])[b'sec-websocket-protocol'].decode('utf-8')
-        #     print('d1', token_key)
-        # except ValueError:
-        #     token_key = None
 
-        
+        headers = dict(scope['headers'])
+        query_string = scope.get("query_string")
+        query_string = query_string.decode("utf-8")
+
+        # print(headers)
+        query_string = query_string.split("=")
+
+        if query_string[0] == "token":
+            token_key = query_string[-1]
+
+            user = await _getUser(token_key)
+            
+            if user is not None:
+                scope["user"] = user
+                return await super().__call__(scope, receive, send)
+
+        if b'authorization' in headers and b"key" in headers:
+            _token, token = headers[b"authorization"].strip().split()
+            _key, key = headers[b"key"].strip().split()
+            
+            key = key.decode("utf-8")
+            token = token.decode("utf-8")
+
+            user = await _getUser(token)
+            device = await _getDevice(user, key)
+
+            if device is not None and user is not None:
+                scope["device"] = device
+                scope["user"] = user
+
+                return await super().__call__(scope, receive, send)
 
 
 def JwtAuthMiddlewareStack(inner):

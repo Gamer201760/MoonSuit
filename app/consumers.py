@@ -9,10 +9,10 @@ class MyCons(GenericAsyncAPIConsumer):
     serializer_class = DeviceSerializer
 
     async def connect(self):
-        key = self.scope.get("key", None)
-        print(key)
-        if key:
-            self.room_group_name = f'chat_{key}'
+        self.key = self.scope.get("device", None)
+        print(self.key)
+        if self.key:
+            self.room_group_name = f'chat_{self.key}'
                 
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -28,14 +28,16 @@ class MyCons(GenericAsyncAPIConsumer):
 
     async def disconnect(self, code):
         print("DISCONNECT")
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-        await self.channel_layer.group_discard(
-            "chat_datas",
-            self.channel_name
-        )
+        if self.key:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+        else:
+            await self.channel_layer.group_discard(
+                "chat_datas",
+                self.channel_name
+            )
 
     @action()
     async def getdatas(self, keys, **kwargs):
@@ -58,14 +60,13 @@ class MyCons(GenericAsyncAPIConsumer):
     
     @action()
     async def setdatas(self, datas, **kwargs):
-        key = self.scope["key"]
-        print(key)
-        await self.send_json(await set_device_datas(key, datas))
+        print(self.key)
+        await self.send_json(await set_device_datas(self.key, datas))
 
         await self.channel_layer.group_send("chat_datas", {
             "type": "data_msg",
             "datas": datas,
-            "key": key
+            "key": self.key
         })
 
 
