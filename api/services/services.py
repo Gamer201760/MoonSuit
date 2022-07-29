@@ -79,7 +79,8 @@ def RegisterDevice_services(request: HttpRequest, serializer_class: serializers.
 
 def DeleteDevice_services(request: HttpRequest, serializer_class: serializers.ModelSerializer):
     serializer = _base_ser_settings(request, serializer_class)
-    key = serializer.validated_data.get("key", None)
+    key = serializer.validated_data.get("key")
+
     if key is None:
         return Response({"error": ["Key is nullable"]}, status=status.HTTP_404_NOT_FOUND)
 

@@ -43,3 +43,5 @@ class RegisterDeviceSerializer(serializers.ModelSerializer):
             owner=validated_data.get('owner')
         )
         return device
+
+
