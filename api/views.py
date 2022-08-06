@@ -7,9 +7,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .services.utils import *
 from .services.services import *
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 
 # Create your views here.
+
+def index(request):
+    return HttpResponse("ok")
 
 class Register(APIView):
 

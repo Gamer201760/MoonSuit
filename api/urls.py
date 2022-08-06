@@ -16,12 +16,12 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework.authtoken import views
 from api.views import *
-
+from .services.ObtainAuthToken import ObtainAuthToken
 
 
 urlpatterns = [
     # path('getuserdata/', GetUserData.as_view()),
-    # path('login/', ObtainAuthToken.as_view()),
+    path('login/', ObtainAuthToken.as_view()),
     # path('serialkey/create/', CreateSerialKey.as_view()),
     # path('serialkey/delete/<uuid:serialkey>/', CreateSerialKey.as_view()),
     path('register/', Register.as_view()),

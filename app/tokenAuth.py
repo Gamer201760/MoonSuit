@@ -1,3 +1,7 @@
+from django.db import close_old_connections
+from channels.middleware import BaseMiddleware
+from channels.db import database_sync_to_async
+from rest_framework.authtoken.models import Token
 import os
 from app.models import *
 from api.models import User
@@ -5,14 +9,10 @@ import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
-from rest_framework.authtoken.models import Token
 
-from channels.db import database_sync_to_async
-from channels.middleware import BaseMiddleware
-
-from django.db import close_old_connections
 
 ALGORITHM = "HS256"
+
 
 @database_sync_to_async
 def _getUser(token: str) -> User:
@@ -20,6 +20,7 @@ def _getUser(token: str) -> User:
         return Token.objects.get(key=token).user
     except:
         return None
+
 
 @database_sync_to_async
 def _getDevice(user: User, key: str) -> Device:
@@ -33,19 +34,18 @@ class TokenAuthMiddleware(BaseMiddleware):
 
     async def __call__(self, scope, receive, send):
         close_old_connections()
-
         headers = dict(scope['headers'])
         query_string = scope.get("query_string")
         query_string = query_string.decode("utf-8")
 
-        # print(headers)
+        print(headers)
         query_string = query_string.split("=")
 
         if query_string[0] == "token":
             token_key = query_string[-1]
 
             user = await _getUser(token_key)
-            
+
             if user is not None:
                 scope["user"] = user
                 return await super().__call__(scope, receive, send)
@@ -53,7 +53,7 @@ class TokenAuthMiddleware(BaseMiddleware):
         if b'authorization' in headers and b"key" in headers:
             _token, token = headers[b"authorization"].strip().split()
             _key, key = headers[b"key"].strip().split()
-            
+
             key = key.decode("utf-8")
             token = token.decode("utf-8")
 
