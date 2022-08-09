@@ -38,16 +38,16 @@ class TokenAuthMiddleware(BaseMiddleware):
         query_string = scope.get("query_string")
         query_string = query_string.decode("utf-8")
 
-        print(headers)
         query_string = query_string.split("=")
 
         if query_string[0] == "token":
             token_key = query_string[-1]
-
+        
             user = await _getUser(token_key)
 
             if user is not None:
                 scope["user"] = user
+                scope["user_token"] = token_key
                 return await super().__call__(scope, receive, send)
 
         if b'authorization' in headers and b"key" in headers:
@@ -63,6 +63,7 @@ class TokenAuthMiddleware(BaseMiddleware):
             if device is not None and user is not None:
                 scope["device"] = device
                 scope["user"] = user
+                scope["user_token"] = token
 
                 return await super().__call__(scope, receive, send)
 

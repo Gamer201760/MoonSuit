@@ -11,6 +11,11 @@ class MyCons(GenericAsyncAPIConsumer):
     async def connect(self):
         self.key = self.scope.get("device", None)
         print(f"Connected {self.scope.get('client')}")
+
+        self.user = self.scope.get("user", None)
+        self.datachat_name = f"datachat_{self.scope.get('user_token')}"
+        print("Datachat", self.datachat_name)
+
         if self.key:
             self.room_group_name = f'chat_{self.key}'
 
@@ -19,9 +24,8 @@ class MyCons(GenericAsyncAPIConsumer):
                 self.channel_name
             )
         else:
-            self.user = self.scope.get("user", None)
             await self.channel_layer.group_add(
-                "chat_datas",
+                self.datachat_name,
                 self.channel_name
             )
         await self.accept()
@@ -35,7 +39,7 @@ class MyCons(GenericAsyncAPIConsumer):
             )
         else:
             await self.channel_layer.group_discard(
-                "chat_datas",
+                self.datachat_name,
                 self.channel_name
             )
 
@@ -79,7 +83,7 @@ class MyCons(GenericAsyncAPIConsumer):
     async def setdatas(self, datas, **kwargs):
         await set_device_datas(self.key, datas)
 
-        await self.channel_layer.group_send("chat_datas", {
+        await self.channel_layer.group_send(self.datachat_name, {
             "type": "data_msg",
             "datas": datas,
             "key": self.key
