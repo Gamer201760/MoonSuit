@@ -44,6 +44,10 @@ class MyCons(GenericAsyncAPIConsumer):
             )
 
     @action()
+    async def get_devices_data(self, **kwargs):
+        await self.send_json({"message": await get_device_data_owner(self.user), "type": "devices"})
+
+    @action()
     async def getdatas(self, keys, **kwargs):
         d = await getDevice_owner(self.user)
         f = [key for key in keys if key in d]
@@ -68,6 +72,7 @@ class MyCons(GenericAsyncAPIConsumer):
         f = [key for key in keys if key in d]
 
         for key in f:
+            print(key)
             await self.send_json(
                 {
                     "message": f"Control was send {key}",

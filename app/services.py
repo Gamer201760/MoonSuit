@@ -2,6 +2,7 @@ import json
 from channels.db import database_sync_to_async
 from api.models import User
 from app.models import Device
+from .serializers import DeviceSerializer
 
 
 @database_sync_to_async
@@ -17,6 +18,12 @@ def set_device_controlling(key, controlling):
     key.controlling = controlling
     key.save()
     return controlling
+
+
+@database_sync_to_async
+def get_device_data_owner(user: User) -> list:
+    devices = Device.objects.filter(owner=user).all()
+    return [DeviceSerializer(device).data for device in devices]
 
 
 @database_sync_to_async

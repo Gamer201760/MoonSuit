@@ -12,11 +12,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +23,7 @@ load_dotenv()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-pj%g)rjyz7b7#0pgv2@inh904agoz-*7*wuol(fkx3#2o(9vht"
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", False)
 
 ALLOWED_HOSTS = ['*']
 
@@ -44,7 +42,7 @@ INSTALLED_APPS = [
     'channels',
     'app',
     'corsheaders',
-    'api'
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +80,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://192.168.0.242',
+    "http://remoter_web:8080/"
+    "http://remoter_nginx/"
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -178,5 +178,5 @@ SIMPLE_JWT = {
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get("EMAIL")
-EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD")
+EMAIL_HOST_USER = os.getenv("EMAIL", "r@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("PASSWORD", "1")

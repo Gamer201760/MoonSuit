@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  remoter:
+    image: remoter
+    depends_on:
+      - db
+      - nginx
+    container_name: remoter_web
+    restart: always
+    environment:
+      - DEBUG=True
+      - EMAIL=azama@ya.ru
+      - PASSWORD=1234
+    networks:
+      - remoter_network
+
+  db:
+    container_name: remoter_db
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=remoter
+    ports:
+      - "5433:5432"
+    networks:
+      - remoter_network
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  nginx:
+    container_name: remoter_nginx
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - remoter_network
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+
+volumes:
+  db:
+    driver: local
+
+networks:
+  remoter_network:
+    driver: bridge
