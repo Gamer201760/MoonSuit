@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   remoter:
-    image: remoter
+    image: gglamer/remoter
     depends_on:
       - db
       - nginx

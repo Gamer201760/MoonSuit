@@ -23,6 +23,5 @@ from api.views import index
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('pos/', include('pos.urls')),
     path('', index)
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
