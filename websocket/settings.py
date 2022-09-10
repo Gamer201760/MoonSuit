@@ -80,8 +80,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://192.168.0.242',
-    "http://remoter_web:8080/"
-    "http://remoter_nginx/"
+    "http://remoter_web:8080",
+    "http://remoter_nginx"
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -108,11 +108,14 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'websocket',
+        'USER': 'postgres',
+        'PASSWORD': 'remoter',
+        'HOST': 'remoter_db',
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

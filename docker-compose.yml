@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   remoter:
-    image: gglamer/remoter
+    image: gglamer/remoter:0.0.3
     depends_on:
       - db
       - nginx
@@ -21,8 +21,10 @@ services:
     restart: always
     environment:
       - POSTGRES_PASSWORD=remoter
+      - POSTGRES_DB=websocket
+      - POSTGRES_USER=postgres
     ports:
-      - "5433:5432"
+      - "5431:5432"
     networks:
       - remoter_network
     volumes:
