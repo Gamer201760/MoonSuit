@@ -1,15 +1,15 @@
-from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
+import dataclasses
+from json import JSONDecodeError
+from djangochannelsrestframework.generics import AsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import action
 from .serializers import *
 from .services import *
 
 
-class MyCons(GenericAsyncAPIConsumer):
-    queryset = Device.objects.all()
-    serializer_class = DeviceSerializer
+class MyCons(AsyncAPIConsumer):
 
     async def connect(self):
-        self.key = self.scope.get("device", None)
+        self.key: Device = self.scope.get("device", None)
         print(f"Connected {self.scope.get('client')}")
 
         self.user = self.scope.get("user", None)
@@ -18,7 +18,7 @@ class MyCons(GenericAsyncAPIConsumer):
 
         if self.key:
             self.room_group_name = f'chat_{self.key}'
-
+            print(self.room_group_name)
             await self.channel_layer.group_add(
                 self.room_group_name,
                 self.channel_name
@@ -42,28 +42,48 @@ class MyCons(GenericAsyncAPIConsumer):
                 self.datachat_name,
                 self.channel_name
             )
+    # async def receive(self, text_data=None, bytes_data=None, **kwargs):
+    #     print(text_data)
 
     @action()
-    async def get_devices_data(self, **kwargs):
-        await self.send_json({"message": await get_device_data_owner(self.user), "type": "devices"})
+    async def setMainMoonSuitParameter(self, **kwargs):
+        if not self.key:
+            return await self.send_json({"success": False, "message": "You logged in as client"})
+        
+        # param = MoonSuitParametr(**kwargs)
+        kwargs.pop("action")
+        kwargs.pop("request_id")
+        await set_moonsuit_parameter(kwargs, device=self.key)
+        
+        await self.channel_layer.group_send(self.datachat_name, {
+            "type": "data_msg",
+            "datas": kwargs,
+            "key": str(self.key)
+        })
 
+    
     @action()
-    async def getdatas(self, keys, **kwargs):
-        d = await getDevice_owner(self.user)
-        f = [key for key in keys if key in d]
-
-        for key in f:
-            await self.send_json(
-                {
-                    "message": f"{key} data has been requested",
-                })
-            await self.channel_layer.group_send(f"chat_{key}", {
-                "type": "typing_msg",
-                "types": "getdatas"
+    async def getMainMoonsuitParameter(self, key, **kwargs):
+        await self.send_json(
+            {
+                "message": f"{key} data has been requested",
             })
+        await self.channel_layer.group_send(f"chat_{key}", {
+            "type": "typing_msg",
+            "types": "getdatas"
+        })
+
+    @action()
+    async def getMainMoonsuitParameterDB(self, **kwargs):
+        key = kwargs.get("key", None)
+        if self.key:
+            key = self.key
+        await self.send_json({"type": "data", "datas": await getMoonSuitData(key)})
 
     @action()
     async def getcontrolling(self, **kwargs):
+        if not self.key:
+            return await self.send_json({"success": False, "message": "You logged in as client"})
         await self.send_json({"type": "controlling", "controlling": self.key.controlling})
 
     @action()
@@ -84,28 +104,8 @@ class MyCons(GenericAsyncAPIConsumer):
                 "controlling": controlling
             })
 
-    @action()
-    async def setdatas(self, datas, **kwargs):
-        await set_device_datas(self.key, datas)
-
-        await self.channel_layer.group_send(self.datachat_name, {
-            "type": "data_msg",
-            "datas": datas,
-            "key": self.key
-        })
-
-    async def data_msg(self, event):
-        datas = event["datas"]
-        key = event["key"]
-        await self.send_json({
-            "type": "data",
-            "datas": datas,
-            "key": str(key)
-        })
-
     async def controlling_msg(self, event):
         controlling = event["controlling"]
-        print(controlling)
         await self.send_json({
             "type": "controlling",
             "controlling": controlling
@@ -116,4 +116,13 @@ class MyCons(GenericAsyncAPIConsumer):
 
         await self.send_json({
             "type": types
+        })
+
+    async def data_msg(self, event):
+        datas = event["datas"]
+        key = event["key"]
+        await self.send_json({
+            "type": "data",
+            "datas": datas,
+            "key": str(key)
         })

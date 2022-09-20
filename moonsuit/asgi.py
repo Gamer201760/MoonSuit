@@ -1,5 +1,5 @@
 """
-ASGI config for websocket project.
+ASGI config for moonsuit project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -14,7 +14,7 @@ import django
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'websocket.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'moonsuit.settings')
 
 django.setup()
 from app.routing import *

@@ -58,12 +58,12 @@ class TokenAuthMiddleware(BaseMiddleware):
             token = token.decode("utf-8")
 
             user = await _getUser(token)
-            device = await _getDevice(user, key)
+            device: Device = await _getDevice(user, key)
 
             if device is not None and user is not None:
-                scope["device"] = device
                 scope["user"] = user
                 scope["user_token"] = token
+                scope["device"] = device
 
                 return await super().__call__(scope, receive, send)
 
